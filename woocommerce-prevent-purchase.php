@@ -1,16 +1,32 @@
 <?php
 /**
- * Plugin Name: WooCommerce - Prevent Purchase
- * Plugin URI: http://sumobi.com
- * Description: Prevents a product from being purchased
- * Author: Andrew Munro
- * Author URI: http://sumobi.com
- * Version: 1.0
- * Text Domain: woocommerce-prevent-purchase
+ * Plugin Name: SSBC - WooCommerce - Prevent Purchase
+ * Plugin URI: 
+ * Description: Prevents a product from being purchased using a checkbox or deadline
+ * Author: Lois Overvoorde, adapted from woocommerce-prevent-purchase by Andrew Munro (http://sumobi.com)
+ * Author URI: https://github.com/loisovervoorde
+ * Version: 2.0.0
+ * Text Domain: ssbc-woocommerce-prevent-purchase
  * Domain Path: languages
  */
 
+ function var_error_log( $object=null ){
+}
 
+function var2log( $msg, $title = '' )
+{
+    $error_dir = WP_CONTENT_DIR . '/plugins/ssbc-woocommerce-prevent-purchase/ssbc-woocommerce-prevent-purchase.log';
+    $date = date( 'd.m.Y h:i:s' );
+    ob_start();                    // start buffer capture
+    var_dump( $msg );              // dump the values
+    $contents = ob_get_contents(); // put the buffer into a variable
+    ob_end_clean();                // end capture
+    $log = $title . "  |  " . $contents . "\n";
+    error_log( $log, 3, $error_dir );
+}
+
+ 
+ 
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
@@ -155,6 +171,7 @@ final class WooCommerce_Prevent_Purchase {
 
 		$prevent_purchase     = get_post_meta( get_the_ID(), '_wc_prevent_purchase', true );
 		$prevent_purchase_msg = get_post_meta( get_the_ID(), '_wc_prevent_purchase_msg', true );
+		
 
 		if ( $prevent_purchase ) {
 			$message = ! empty( $prevent_purchase_msg ) ? $prevent_purchase_msg : apply_filters( 'wc_prevent_purchase_message', __( 'This product cannot be purchased.', 'woocommerce-prevent-purchase' ) );
@@ -165,6 +182,8 @@ final class WooCommerce_Prevent_Purchase {
 		}
 
 	}
+	
+	
 
 	/**
 	 * Add prevent purchase fields to admin screen
@@ -198,32 +217,59 @@ final class WooCommerce_Prevent_Purchase {
 				'value'         => get_post_meta( $thepostid, '_wc_prevent_purchase_msg', true )
 			)
 		);
-
+		
+		// deadline field
+		
+		woocommerce_wp_text_input( 
+			array( 
+				'id'            => 'wc-prevent-purchase', 
+				'name'          => '_wc_prevent_purchase_deadline',
+				'wrapper_class' => '', 
+				'label'         => __( 'Prevent Purchase Deadline', 'woocommerce-prevent-purchase' ),
+				'value'         => get_post_meta( $thepostid, '_wc_prevent_purchase_deadline', true ),
+				'placeholder'   => 'yyyy/mm/dd'
+			)
+		);
+		
 		echo '</div>';
+		
 
 	}
 	
 	/**
 	 * Save prevent purchase option for simple and variable products
 	 *
-	 * @since 1.0
+	 * @since 2.0
 	 */
 	public function save_meta( $post_id ) {
 		
-		if ( isset( $_POST['_wc_prevent_purchase'] ) ) {
-			update_post_meta( $post_id, '_wc_prevent_purchase', true );
+		var2log( time() );
+		var2log($_POST['_wc_prevent_purchase_deadline']);
+		var2log( strtotime($_POST['_wc_prevent_purchase_deadline']) );
+		var2log( time() > strtotime($_POST['_wc_prevent_purchase_deadline']) );
+
+		if ( isset( $_POST['_wc_prevent_purchase'] ) ) { 					//this checks if the box is ticked
+			update_post_meta( $post_id, '_wc_prevent_purchase', true ); 	//if the box is ticked save 'true'
 		} else {
-			delete_post_meta( $post_id, '_wc_prevent_purchase' );
+			if ( isset( $_POST['_wc_prevent_purchase_deadline'] ) && ! empty ( $_POST['_wc_prevent_purchase_deadline'] ) && time() > strtotime($_POST['_wc_prevent_purchase_deadline']) ) {							 //this checks if the deadline output exists, isn't blank, and if the current date is after it
+				update_post_meta( $post_id, '_wc_prevent_purchase', true ); //if we're after the deadline save 'true'
+			}else{
+				delete_post_meta( $post_id, '_wc_prevent_purchase' );	    //if we're before the deadline and the box is unticked the metadata is deleted
+			}
 		}
 
 		if ( isset( $_POST['_wc_prevent_purchase_msg'] ) && ! empty ( $_POST['_wc_prevent_purchase_msg'] ) ) {
 			update_post_meta( $post_id, '_wc_prevent_purchase_msg', $_POST['_wc_prevent_purchase_msg'] );
 		} else {
 			delete_post_meta( $post_id, '_wc_prevent_purchase_msg' );
+		}		
+		
+		if ( isset( $_POST['_wc_prevent_purchase_deadline'] ) && ! empty ( $_POST['_wc_prevent_purchase_deadline'] ) ) {
+			update_post_meta( $post_id, '_wc_prevent_purchase_deadline', $_POST['_wc_prevent_purchase_deadline'] );
+		} else {
+			delete_post_meta( $post_id, '_wc_prevent_purchase_deadline' );
 		}
-
 	}
-
 }
 
 /**
@@ -251,3 +297,5 @@ function woocommerce_prevent_purchase() {
     }
 }
 add_action( 'plugins_loaded', 'woocommerce_prevent_purchase', 100 );
+
+/////
