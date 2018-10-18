@@ -2,7 +2,7 @@
 /*
  * Plugin Name:     SSBC - WooCommerce - Prevent Purchase
  * Plugin URI:      https://github.com/curiouscactus/woocommerce-prevent-purchase and https://github.com/wp-plugins/woocommerce-prevent-purchase
- * Description:     Prevents a product from being purchased using a checkbox or deadline
+ * Description:     Prevents a product from being purchased using a checkbox or deadline.
  * Author:          Lois Overvoorde (adapted from woocommerce-prevent-purchase by Andrew Munro/Sumobi) 
  * Author URI:      https://github.com/curiouscactus and http://sumobi.com
  * Text Domain:     ssbc-woocommerce-prevent-purchase
