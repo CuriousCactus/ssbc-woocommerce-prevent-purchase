@@ -1,4 +1,4 @@
-#woocommerce-prevent-purchase
+# woocommerce-prevent-purchase
 Prevents a product from being purchased using a checkbox or deadline. Deadline feature added by CuriousCactus.
 Original readme below:
 
